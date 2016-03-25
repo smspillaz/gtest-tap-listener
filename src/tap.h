@@ -80,7 +80,7 @@ class TestResult {
     if (this->skip) {
       ss << "# SKIP " << this->comment;
     } else if (!this->comment.empty()) {
-      ss << "# " << this->comment;
+      ss << this->comment << std::endl;
     }
     return ss.str();
   }
