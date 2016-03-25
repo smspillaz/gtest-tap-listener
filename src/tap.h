@@ -23,6 +23,8 @@
  *
  * @author Bruno P. Kinoshita <http://www.kinoshita.eti.br>
  * @since 0.1
+ *
+ * @author Sam Spilsbury <s@polysquare.org>
  */
 
 #ifndef TAP_H_
