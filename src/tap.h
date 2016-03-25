@@ -80,10 +80,7 @@ class TestResult {
     if (this->skip) {
       ss << "# SKIP ";
     } else if (!this->comment.empty()) {
-      ss << std::endl
-          << "    # Diagnostic" << std::endl
-          << "      ---" << std::endl
-          << " " << replace_all_copy(this->comment, "\n", "\n  ");
+      ss << this->comment;
     }
     return ss.str();
   }
@@ -236,29 +233,38 @@ public:
       tapResult.setStatus("not ok");
       std::stringstream ss;
 
+      ss << std::endl
+         << "    # Diagnostic" << std::endl
+         << "      ---" << std::endl;
+
       for (size_t i = 0; i < number; ++i) {
         auto const &part = testResult->GetTestPartResult(i);
         auto escaped_msg = EscapeGTestMessages(std::string("\n") +
                                                LeftStrip(part.summary()));
 
         if (part.failed()) {
-          ss << "     error: "
+          ss << "      error: "
              << std::endl
-             << "       stack: "
+             << "        stack: "
              << (part.file_name() ? part.file_name() : "(unknown)")
              << ":"
              << part.line_number()
              << std::endl
-             << "       message: \""
+             << "        message: \""
              << escaped_msg << "\""
              << std::endl;
         }
       }
 
-      ss << "    ...";
+      ss << "      ...";
       tapResult.setComment(ss.str());
     } else {
       tapResult.setStatus("ok");
+      double elapsed = (testResult->elapsed_time() / 1000.0);
+
+      std::stringstream timeComment;
+      timeComment << " # time=" << elapsed << "s";
+      tapResult.setComment(timeComment.str());
     }
 
     tapResult.setNumber(++numTests);
