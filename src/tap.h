@@ -183,7 +183,29 @@ class TapListener: public ::testing::EmptyTestEventListener {
       tapResult.setStatus("Bail out!");
     } else if (testResult->Failed()) {
       tapResult.setStatus("not ok");
-      tapResult.setComment(testResult->GetTestPartResult(number-1).summary());
+      std::stringstream ss;
+
+      for (size_t i = 0; i < number; ++i) {
+        auto const &part = testResult->GetTestPartResult(i);
+        auto escaped_msg = replace_all_copy(replace_all_copy(part.message(),
+                                                             "\"", "\\\""),
+                                            "\\n", "\\\\n");
+
+        if (part.failed()) {
+          ss << " error: "
+             << std::endl
+             << "   stack: "
+             << (part.file_name() ? part.file_name() : "(unknown)")
+             << ":"
+             << part.line_number()
+             << std::endl
+             << "   message: \"" << escaped_msg << "\""
+             << std::endl;
+        }
+      }
+
+      ss << "...\n";
+      tapResult.setComment(ss.str());
     } else {
       tapResult.setStatus("ok");
     }
