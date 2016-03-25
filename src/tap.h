@@ -171,8 +171,22 @@ class TapListener: public ::testing::EmptyTestEventListener {
 
  private:
   std::map<std::string, tap::TestSet> testCaseTestResultMap;
+  size_t numTests;
 
-  void addTapTestResult(const testing::TestInfo& testInfo) {
+  std::string getCommentOrDirective(const std::string& comment, bool skip) {
+    std::stringstream commentText;
+
+    if (skip) {
+      commentText << " # SKIP " << comment;
+    } else if (!comment.empty()) {
+      commentText << " # " << comment;
+    }
+
+    return commentText.str();
+  }
+
+public:
+  virtual void OnTestEnd(const testing::TestInfo& testInfo) {
     tap::TestResult tapResult;
     tapResult.setName(testInfo.name());
     tapResult.setSkip(!testInfo.should_run());
@@ -210,58 +224,19 @@ class TapListener: public ::testing::EmptyTestEventListener {
       tapResult.setStatus("ok");
     }
 
-    this->addNewOrUpdate(testInfo.test_case_name(), tapResult);
+    tapResult.setNumber(numTests);
+    std::cout << tapResult.toString() << std::endl;
+    numTests++;
   }
 
-  std::string getCommentOrDirective(const std::string& comment, bool skip) {
-    std::stringstream commentText;
-
-    if (skip) {
-      commentText << " # SKIP " << comment;
-    } else if (!comment.empty()) {
-      commentText << " # " << comment;
-    }
-
-    return commentText.str();
-  }
-
-  void addNewOrUpdate(const std::string& testCaseName, tap::TestResult testResult) {
-    std::map<std::string, tap::TestSet>::const_iterator ci =
-      this->testCaseTestResultMap.find(testCaseName);
-    if (ci != this->testCaseTestResultMap.end()) {
-      tap::TestSet testSet = ci->second;
-      testSet.addTestResult(testResult);
-      this->testCaseTestResultMap[testCaseName] = testSet;
-    } else {
-      tap::TestSet testSet;
-      testSet.addTestResult(testResult);
-      this->testCaseTestResultMap[testCaseName] = testSet;
-    }
-  }
-
-public:
-  virtual void OnTestEnd(const testing::TestInfo& testInfo) {
-    //printf("%s %d - %s\n", testInfo.result()->Passed() ? "ok" : "not ok", this->testNumber, testInfo.name());
-    this->addTapTestResult(testInfo);
+  virtual void OnTestProgramBegin(const testing::UnitTest& unit_test) {
+    //--- Write the count and the word.
+    std::cout << "TAP version 13" << std::endl;
   }
 
   virtual void OnTestProgramEnd(const testing::UnitTest& unit_test) {
     //--- Write the count and the word.
-    std::cout << "TAP version 13" << std::endl;
-
-    size_t count = 0;
-    for (auto const &testSet : this->testCaseTestResultMap) {
-      count += testSet.second.getNumberOfTests();
-    }
-
-    std::cout << "1.." << count << std::endl;
-
-    std::map<std::string, tap::TestSet>::const_iterator ci;
-    for (ci = this->testCaseTestResultMap.begin();
-         ci != this->testCaseTestResultMap.end(); ++ci) {
-      const tap::TestSet& testSet = ci->second;
-      std::cout << testSet.toString();
-    }
+    std::cout << "1.." << numTests << std::endl;
   }
 };
 
