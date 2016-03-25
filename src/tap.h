@@ -39,6 +39,8 @@
 
 namespace tap {
 
+namespace mocha {
+
 // based on http://stackoverflow.com/a/7724536/831180
 std::string replace_all_copy(
   std::string const& original,
@@ -255,6 +257,8 @@ public:
     std::cout << "1.." << numSuites << std::endl;
   }
 };
+
+} // namespace mocha
 
 } // namespace tap
 
