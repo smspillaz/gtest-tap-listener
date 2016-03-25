@@ -23,7 +23,7 @@ class MochaGTestTapListenerConan(ConanFile):
 
     def source(self):
         zip_name = "gtest-%s.zip" % self.version
-        url = "https://github.com/kinow/gtest-tap-listener-mocha/archive/master.zip"
+        url = "https://github.com/smspillaz/gtest-tap-listener-mocha/archive/master.zip"
         download(url, zip_name)
         unzip(zip_name)
         os.unlink(zip_name)
