@@ -182,7 +182,7 @@ class TapListener: public ::testing::EmptyTestEventListener {
 
 public:
   virtual void OnTestEnd(const testing::TestInfo& testInfo) {
-    tap::TestResult tapResult;
+    tap:::mocha::TestResult tapResult;
     tapResult.setName(testInfo.name());
     tapResult.setSkip(!testInfo.should_run());
 
