@@ -131,36 +131,6 @@ class TestResult {
   }
 };
 
-class TestSet {
-
- private:
-  std::list<TestResult> testResults;
-
- public:
-  const std::list<TestResult>& getTestResults() const {
-    return testResults;
-  }
-
-  void addTestResult(TestResult& testResult) {
-    testResult.setNumber((this->getNumberOfTests() + 1));
-    this->testResults.push_back(testResult);
-  }
-
-  int getNumberOfTests() const {
-    return this->testResults.size();
-  }
-
-  std::string toString() const {
-    std::stringstream ss;
-    for (std::list<TestResult>::const_iterator ci = this->testResults.begin();
-   ci != this->testResults.end(); ++ci) {
-      TestResult testResult = *ci;
-      ss << testResult.toString() << std::endl;
-    }
-    return ss.str();
-  }
-};
-
 namespace {
   std::string EscapeGTestMessages(std::string const &message) {
     return replace_all_copy(
@@ -185,7 +155,6 @@ namespace {
 class TapListener: public ::testing::EmptyTestEventListener {
 
  private:
-  std::map<std::string, tap::TestSet> testCaseTestResultMap;
   size_t numTests;
   size_t numFailuresInSuite;
   size_t numSuites;
