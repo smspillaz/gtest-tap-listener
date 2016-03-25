@@ -1,6 +1,7 @@
-GTest TAP Listener 0.4
+Mocha GTest Tap Listener
 ============================
 
+https://github.com/smspillaz/mocha-gtest-tap-listener
 https://github.com/kinow/gtest-tap-listener
 http://code.google.com/p/googletest/
 http://www.tap4j.org
@@ -19,3 +20,9 @@ listener.
 
 See the samples directory for code to be used as reference. Feel free to send 
 contributions, pull requests, suggestions or any other feedback to the project.
+
+This fork
+---------
+
+This fork aims for compatibility with the tap-mocha-reporter module from
+node, which allows the use of all the mocha reporters in a test.
