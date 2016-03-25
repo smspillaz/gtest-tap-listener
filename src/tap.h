@@ -126,9 +126,7 @@ class TestResult {
   std::string toString() const {
     std::stringstream ss;
     ss << "    " << this->status << " " << this->number << " " << this->name;
-#ifdef GTEST_TAP_13_DIAGNOSTIC
     ss << this->getComment();
-#endif
     return ss.str();
   }
 };
