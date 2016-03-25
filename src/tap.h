@@ -258,7 +258,7 @@ public:
 
     std::map<std::string, tap::TestSet>::const_iterator ci;
     for (ci = this->testCaseTestResultMap.begin();
-   ci != this->testCaseTestResultMap.end(); ++ci) {
+         ci != this->testCaseTestResultMap.end(); ++ci) {
       const tap::TestSet& testSet = ci->second;
       std::cout << testSet.toString();
     }
