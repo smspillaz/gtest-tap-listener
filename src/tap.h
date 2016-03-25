@@ -158,9 +158,8 @@ class TestSet {
 
   std::string toString() const {
     std::stringstream ss;
-    ss << "1.." << this->getNumberOfTests() << std::endl;
     for (std::list<TestResult>::const_iterator ci = this->testResults.begin();
-	 ci != this->testResults.end(); ++ci) {
+   ci != this->testResults.end(); ++ci) {
       TestResult testResult = *ci;
       ss << testResult.toString() << std::endl;
     }
@@ -226,12 +225,22 @@ public:
 
   virtual void OnTestProgramEnd(const testing::UnitTest& unit_test) {
     //--- Write the count and the word.
+#ifdef GTEST_TAP_PRINT_TO_STDOUT
+    std::cout << "TAP version 13" << std::endl;
+#endif
+
+    size_t count = 0;
+    for (auto const &testSet : this->testCaseTestResultMap) {
+      count += testSet.second.getNumberOfTests();
+    }
+
+    std::cout << "1.." << count << std::endl;
+
     std::map<std::string, tap::TestSet>::const_iterator ci;
     for (ci = this->testCaseTestResultMap.begin();
-	 ci != this->testCaseTestResultMap.end(); ++ci) {
+   ci != this->testCaseTestResultMap.end(); ++ci) {
       const tap::TestSet& testSet = ci->second;
 #ifdef GTEST_TAP_PRINT_TO_STDOUT
-      std::cout << "TAP version 13" << std::endl;
       std::cout << testSet.toString();
 #else
       std::ofstream tapFile;
