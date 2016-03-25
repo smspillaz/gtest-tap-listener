@@ -123,14 +123,14 @@ class TestResult {
 
   std::string toString() const {
     std::stringstream ss;
-    ss << this->status << " " << this->number << " " << this->name;
+    ss << "    " << this->status << " " << this->number << " " << this->name;
 #ifdef GTEST_TAP_13_DIAGNOSTIC
     std::string comment_text = this->getComment();
     if (!comment_text.empty()) {
       ss << std::endl
-       << "# Diagnostic" << std::endl
-       << "  ---" << std::endl
-       << "  " << replace_all_copy(this->getComment(), "\n", "\n  ");
+       << "    # Diagnostic" << std::endl
+       << "      ---" << std::endl
+       << " " << replace_all_copy(this->getComment(), "\n", "\n  ");
     }
 #endif
     return ss.str();
@@ -167,11 +167,35 @@ class TestSet {
   }
 };
 
+namespace {
+  std::string EscapeGTestMessages(std::string const &message) {
+    return replace_all_copy(
+      replace_all_copy(
+        replace_all_copy(
+          replace_all_copy(message,
+                           "\"", "\\\""),
+          "\\n", "[NEWLINE]"),
+        "\n", "\\n         "),
+      "[NEWLINE]", "\\\\n");
+  }
+
+  std::string LeftStrip(std::string input) {
+    input.erase(input.begin(),
+                std::find_if(input.begin(), input.end(),
+                             std::not1(std::ptr_fun<int, int>(std::isspace))));
+    return input;
+  }
+}
+
+
 class TapListener: public ::testing::EmptyTestEventListener {
 
  private:
   std::map<std::string, tap::TestSet> testCaseTestResultMap;
   size_t numTests;
+  size_t numFailuresInSuite;
+  size_t numSuites;
+  std::string currentSuite;
 
   std::string getCommentOrDirective(const std::string& comment, bool skip) {
     std::stringstream commentText;
@@ -185,58 +209,92 @@ class TapListener: public ::testing::EmptyTestEventListener {
     return commentText.str();
   }
 
+  // Dumps out the current suite's plan and result
+  void PrintCurrentSuitePlanAndResult() {
+    if (this->numTests) {
+      std::cout << "    1.." << this->numTests << std::endl;
+      if (this->numFailuresInSuite) {
+        std::cout << "not ok "
+                  << this->numSuites
+                  << " " << this->currentSuite
+                  << std::endl;
+      } else {
+        std::cout << "ok "
+                  << this->numSuites
+                  << " " << this->currentSuite
+                  << std::endl;
+      }
+    }
+  }
+
 public:
   virtual void OnTestEnd(const testing::TestInfo& testInfo) {
     tap::TestResult tapResult;
     tapResult.setName(testInfo.name());
     tapResult.setSkip(!testInfo.should_run());
 
+    if (testInfo.test_case_name() != this->currentSuite) {
+      this->PrintCurrentSuitePlanAndResult();
+
+      this->currentSuite = testInfo.test_case_name();
+      this->numSuites++;
+      this->numTests = 0;
+      this->numFailuresInSuite = 0;
+
+      std::cout << "    # Subtest: " << testInfo.test_case_name() << std::endl;
+    }
+
     const testing::TestResult *testResult = testInfo.result();
     int number = testResult->total_part_count();
     if (testResult->HasFatalFailure()) {
       tapResult.setStatus("Bail out!");
     } else if (testResult->Failed()) {
+      this->numFailuresInSuite++;
       tapResult.setStatus("not ok");
       std::stringstream ss;
 
       for (size_t i = 0; i < number; ++i) {
         auto const &part = testResult->GetTestPartResult(i);
-        auto escaped_msg = replace_all_copy(replace_all_copy(part.message(),
-                                                             "\"", "\\\""),
-                                            "\\n", "\\\\n");
+        auto escaped_msg = EscapeGTestMessages(std::string("\n") +
+                                               LeftStrip(part.summary()));
 
         if (part.failed()) {
-          ss << " error: "
+          ss << "     error: "
              << std::endl
-             << "   stack: "
+             << "       stack: "
              << (part.file_name() ? part.file_name() : "(unknown)")
              << ":"
              << part.line_number()
              << std::endl
-             << "   message: \"" << escaped_msg << "\""
+             << "       message: \""
+             << escaped_msg << "\""
              << std::endl;
         }
       }
 
-      ss << "...\n";
+      ss << "    ...";
       tapResult.setComment(ss.str());
     } else {
       tapResult.setStatus("ok");
     }
 
-    tapResult.setNumber(numTests);
+    tapResult.setNumber(++numTests);
     std::cout << tapResult.toString() << std::endl;
-    numTests++;
   }
 
-  virtual void OnTestProgramBegin(const testing::UnitTest& unit_test) {
+  virtual void OnTestProgramStart(const testing::UnitTest& unit_test) override {
     //--- Write the count and the word.
     std::cout << "TAP version 13" << std::endl;
+    std::cout << "# nesting" << std::endl;
+    this->numTests = 0;
+    this->numSuites = 0;
+    this->numFailuresInSuite = 0;
   }
 
   virtual void OnTestProgramEnd(const testing::UnitTest& unit_test) {
     //--- Write the count and the word.
-    std::cout << "1.." << numTests << std::endl;
+    this->PrintCurrentSuitePlanAndResult();
+    std::cout << "1.." << numSuites << std::endl;
   }
 };
 
