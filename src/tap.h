@@ -78,9 +78,12 @@ class TestResult {
   std::string getComment() const {
     std::stringstream ss;
     if (this->skip) {
-      ss << "# SKIP " << this->comment;
+      ss << "# SKIP ";
     } else if (!this->comment.empty()) {
-      ss << this->comment << std::endl;
+      ss << std::endl
+          << "    # Diagnostic" << std::endl
+          << "      ---" << std::endl
+          << " " << replace_all_copy(this->comment, "\n", "\n  ");
     }
     return ss.str();
   }
@@ -125,13 +128,7 @@ class TestResult {
     std::stringstream ss;
     ss << "    " << this->status << " " << this->number << " " << this->name;
 #ifdef GTEST_TAP_13_DIAGNOSTIC
-    std::string comment_text = this->getComment();
-    if (!comment_text.empty()) {
-      ss << std::endl
-       << "    # Diagnostic" << std::endl
-       << "      ---" << std::endl
-       << " " << replace_all_copy(this->getComment(), "\n", "\n  ");
-    }
+    ss << this->getComment();
 #endif
     return ss.str();
   }
@@ -196,18 +193,6 @@ class TapListener: public ::testing::EmptyTestEventListener {
   size_t numFailuresInSuite;
   size_t numSuites;
   std::string currentSuite;
-
-  std::string getCommentOrDirective(const std::string& comment, bool skip) {
-    std::stringstream commentText;
-
-    if (skip) {
-      commentText << " # SKIP " << comment;
-    } else if (!comment.empty()) {
-      commentText << " # " << comment;
-    }
-
-    return commentText.str();
-  }
 
   // Dumps out the current suite's plan and result
   void PrintCurrentSuitePlanAndResult() {
