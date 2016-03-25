@@ -246,9 +246,7 @@ public:
 
     const testing::TestResult *testResult = testInfo.result();
     int number = testResult->total_part_count();
-    if (testResult->HasFatalFailure()) {
-      tapResult.setStatus("Bail out!");
-    } else if (testResult->Failed()) {
+    if (testResult->Failed() || testResult->HasFatalFailure()) {
       this->numFailuresInSuite++;
       tapResult.setStatus("not ok");
       std::stringstream ss;
